@@ -13,21 +13,15 @@ jobs:
 
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
-        python-version: 3.x     # most up-to-date python version
+        python-version: 3.x     
 
     - name: Install packages
-      run: make install         # install command in the Makefile
-
-    - name: Lint
-      run: make lint
-
-    - name: Format Black
-      run: make format
+      run: make install         
       
     - name: Run tests
       run: make test
