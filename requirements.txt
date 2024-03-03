@@ -9,6 +9,7 @@ click==8.1.3
 # Data manipulation and analysis
 numpy==1.26.4
 pandas==2.1.0
+transformers==4.38.2
 
 # CUDA
 #torch==2.2.1+cu118
