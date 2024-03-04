@@ -17,3 +17,9 @@ transformers==4.38.2
 # CPU
 torch==2.2.1
 torchvision==0.17.1
+
+# Data collection
+bs4
+lxml
+re
+csv
