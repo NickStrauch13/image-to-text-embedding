@@ -23,3 +23,7 @@ bs4
 lxml
 regex
 csv
+
+# Model / Embeddings
+clip
+pinecone-client

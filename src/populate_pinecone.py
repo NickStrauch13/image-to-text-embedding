@@ -15,6 +15,8 @@ def encode_image(image_url, model, preprocess, device="cuda"):
     '''
     response = requests.get(image_url)
     image = Image.open(BytesIO(response.content))
+    # show the image
+    image.show()
     image_preprocessed = preprocess(image).unsqueeze(0).to(device)
     with torch.no_grad():
         image_features = model.encode_image(image_preprocessed)
@@ -32,7 +34,7 @@ def load_data(sqlite_db='artworks.db'):
     connection.close()
     return art_data
 
-def populate_pinecone(model, preprocess, device):
+def populate_pinecone(data, model, preprocess, device):
     '''
     Populate Pinecone with image embeddings
     '''
@@ -47,7 +49,7 @@ def populate_pinecone(model, preprocess, device):
     index = pinecone.Index(index_name)
 
     # Process and insert the images into Pinecone
-    for idx, (image_url, description) in enumerate(museum_curation):
+    for idx, (image_url, description) in enumerate(data):
         image_embedding = encode_image(image_url, model, preprocess, device)
         index.upsert(vectors=[(str(idx), image_embedding.flatten())])
 
@@ -56,10 +58,21 @@ def populate_pinecone(model, preprocess, device):
 if __name__ == "__main__":
     device = "cuda" if torch.cuda.is_available() else "cpu"
     print(f"Using {device} device")
-    museum_curation = load_data()
+    art_data = load_data("notebooks/artworks.db")
+
+    ## Testing
+    print(art_data[0])
+    image_url = art_data[0][0]
+    response = requests.get(image_url)
+    image = Image.open(BytesIO(response.content))
+    # show the image
+    image.show()
+
     #TODO: Change the model to the one we trained
     model, preprocess = clip.load("ViT-B/32", device=device)
     print("Model loaded.")
 
-    populate_pinecone(model, preprocess, device)
+    
+
+    populate_pinecone(art_data, model, preprocess, device)
 
