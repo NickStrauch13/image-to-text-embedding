@@ -4,14 +4,19 @@ import csv
 import re
 from lxml import html
 
-# Define a function to generate a slug from the title
+
 def slugify(title):
+    '''
+    Generate a slug from the title.
+    '''
     # Convert to lowercase and replace spaces and non-word characters with dashes
     slug = re.sub(r'\W+', '-', title.lower())
     return slug
 
-# Define a function to fetch artwork data from the Art Institute of Chicago API
 def fetch_artworks_aic():
+    '''
+    Fetch artworks from the Art Institute of Chicago API.
+    '''
     search_url = "https://api.artic.edu/api/v1/artworks/search"
     object_url = "https://api.artic.edu/api/v1/artworks/"
     # Define the search parameters
@@ -31,8 +36,10 @@ def fetch_artworks_aic():
     return artworks
 
 
-# Define a function to scrape the description from the Art Institute of Chicago website
 def scrape_description(artwork_id, slug):
+    '''
+    Scrape the artwork description from the Art Institute of Chicago website.
+    '''
     detail_url = f"https://www.artic.edu/artworks/{artwork_id}/{slug}"  # Updated to include the slug
     response = requests.get(detail_url)
     if response.status_code == 200:
@@ -50,8 +57,10 @@ def scrape_description(artwork_id, slug):
     else:
         return "Failed to fetch the webpage."
 
-# Define the main function to fetch and save the artwork data
 def main():
+    '''
+    Main function to fetch and save artwork data.
+    '''
     artworks = fetch_artworks_aic()
     # Save the artwork data to a CSV file
     with open('artwork_data.csv', 'w', newline='', encoding='utf-8') as csvfile:
