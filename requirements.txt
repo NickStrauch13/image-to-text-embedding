@@ -25,5 +25,7 @@ regex
 csv
 
 # Model / Embeddings
-clip
 pinecone-client
+pillow
+requests
+python-dotenv
