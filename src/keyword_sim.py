@@ -5,7 +5,8 @@ from sklearn.metrics.pairwise import cosine_similarity
 import time
 
 # Connect to the SQLite database
-conn = sqlite3.connect('artworks.db')
+db_path = '../notebooks/artworks.db'  # Adjusted path to the database
+conn = sqlite3.connect(db_path)
 
 # Assuming 'image_url' and 'description' are the column names
 # and 'artworks' is the table name
