@@ -2,10 +2,11 @@ import torch
 import requests
 from PIL import Image
 from io import BytesIO
-import pinecone
+from pinecone import Pinecone
 import sqlite3
 import os
 from clip_utils import CustomCLIPModel, Config
+from dotenv import load_dotenv
 
 def encode_image(image_url, model, device):
     '''
@@ -15,12 +16,13 @@ def encode_image(image_url, model, device):
     try:
         response = requests.get(image_url)
         image = Image.open(BytesIO(response.content))
+        image = image.convert("RGB")
     except Exception as e:
         print(f"Error downloading image from {image_url}")
         print(e)
         return None
     
-    image_processed = Config.clip_transform(image).to(device)
+    image_processed = Config.clip_transform(image).unsqueeze(0).to(device)
 
     with torch.no_grad():
         image_features = model.embed_image(image_processed)
@@ -43,27 +45,26 @@ def populate_pinecone(data, model, device):
     Populate Pinecone with image embeddings
     '''
     # Initialize Pinecone
-    pinecone.init(api_key=os.getenv('PINECONE_API_KEY'), environment='gcp-starter')
-    index_name = "art-module-project"
+    pc = Pinecone(api_key=os.getenv('PINECONE_API_KEY'))
+    index = pc.Index("art-module-project")
 
-    # Check if the index exists, and create it if not
-    if index_name not in pinecone.list_indexes():
-        pinecone.create_index(index_name, dimension=768, metric="cosine")  # Adjust the dimension according to your model's output
-
-    index = pinecone.Index(index_name)
-
-    # Process and insert the images into Pinecone
+    # Process and insert the image with embeddings into Pinecone
     for idx, (image_url, description) in enumerate(data):
         image_embedding = encode_image(image_url, model, device)
         if image_embedding is None:
             print(f"Skipping image {image_url}")
             continue
-        index.upsert(vectors=[(str(idx), image_embedding.flatten())])
+        index.upsert(vectors=[{
+            "id": str(idx), 
+            "values": image_embedding.flatten(), 
+            "metadata": {"image_url": image_url}
+            }])
 
         if idx % 25 == 0:
             print(f"Embedding {idx} uploaded to Pinecone. for {image_url}")
 
 if __name__ == "__main__":
+    load_dotenv()
     device = "cuda" if torch.cuda.is_available() else "cpu"
     print(f"Using {device} device")
 
