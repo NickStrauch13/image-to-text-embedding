@@ -1,7 +1,8 @@
 document.getElementById('searchForm').addEventListener('submit', function(e) {
     e.preventDefault();
     const query = document.getElementById('searchQuery').value;
-    fetch(`/search?query=${encodeURIComponent(query)}`)
+    const numImages = document.getElementById('numImages').value; // Get the number of images
+    fetch(`/search?query=${encodeURIComponent(query)}&numImages=${encodeURIComponent(numImages)}`)
         .then(response => response.json())
         .then(data => {
             const resultsSection = document.getElementById('resultsSection');

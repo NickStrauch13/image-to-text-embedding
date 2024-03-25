@@ -15,9 +15,10 @@ def search():
     '''
     # Get the search query from the request's query string
     query = request.args.get('query')
+    num_images = int(request.args.get('numImages', 3))
     
     # Get image URLs for the query
-    image_urls = get_images_from_pinecone(query)
+    image_urls = get_images_from_pinecone(query, num_images=num_images)
     
     # Return the list of URLs as JSON
     return jsonify(image_urls)
