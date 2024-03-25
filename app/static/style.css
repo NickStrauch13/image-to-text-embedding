@@ -1,0 +1,61 @@
+body {
+    font-family: 'Georgia', serif;
+    background-color: #f0e7db; /* Light beige background */
+    color: #5a4a42; /* Darker brown color for text */
+    margin: 0;
+    padding: 20px;
+    text-align: center; /* Center-aligns text */
+}
+
+.container {
+    max-width: 600px; /* Dynamic width with a maximum */
+    margin: 0 auto; /* Centers the container */
+    padding: 20px;
+    background-color: #fff5e6; /* Very light beige */
+    border-radius: 10px; /* Rounded corners for the container */
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); /* Soft shadow for depth */
+}
+
+header h1 {
+    color: #8b5e3c; /* Warm brown for the heading */
+    margin-bottom: 30px;
+}
+
+.search-form {
+    display: flex;
+    justify-content: center;
+    gap: 10px; /* Space between input and button */
+}
+
+.search-input, .search-button {
+    padding: 10px 15px;
+    border: 2px solid #c9a87c; /* Subtle brown border */
+    background-color: #fffaf0; /* Off-white, for the input and button */
+    border-radius: 20px; /* Rounded corners */
+    font-size: 16px;
+}
+
+.search-input {
+    flex-grow: 1; /* Makes the input field grow to fill space */
+}
+
+.search-button {
+    color: #5a4a42; /* Darker brown for button text */
+    cursor: pointer;
+    transition: background-color 0.3s; /* Smooth background transition */
+}
+
+.search-button:hover {
+    background-color: #e0d4c1; /* Light brown when hovering */
+}
+
+.results-section {
+    margin-top: 20px;
+}
+
+.results-section img {
+    margin: 10px;
+    border-radius: 5px; /* Rounded corners for images */
+    width: 200px;
+    height: auto;
+}

@@ -29,3 +29,6 @@ pinecone-client
 pillow
 requests
 python-dotenv
+
+# app
+flask
