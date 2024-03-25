@@ -23,3 +23,9 @@ bs4
 lxml
 regex
 csv
+
+# Model / Embeddings
+pinecone-client
+pillow
+requests
+python-dotenv
