@@ -4,20 +4,6 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 import time
 
-# Connect to the SQLite database
-db_path = '../notebooks/artworks.db'  # Adjusted path to the database
-conn = sqlite3.connect(db_path)
-query = "SELECT image_url, description FROM artworks"
-df = pd.read_sql_query(query, conn)
-
-# Ensure the database connection is closed after the data is loaded
-conn.close()
-
-# Initialize a TF-IDF Vectorizer
-vectorizer = TfidfVectorizer()
-
-# Fit and transform the descriptions to a vector
-tfidf_matrix = vectorizer.fit_transform(df['description'])
 
 def search(keyword):
     # Start timing
@@ -48,7 +34,24 @@ def search(keyword):
     # Return the sorted scores for review
     return sorted_scores
 
-# Example search
-keyword = "beach"
-results = search(keyword)
-print(results[['image_url', 'description', 'similarity']].head())  # Print only the top results for brevity
+
+if __name__ == "__main__":
+    # Connect to the SQLite database
+    db_path = '../notebooks/artworks.db'  # Adjusted path to the database
+    conn = sqlite3.connect(db_path)
+    query = "SELECT image_url, description FROM artworks"
+    df = pd.read_sql_query(query, conn)
+
+    # Ensure the database connection is closed after the data is loaded
+    conn.close()
+
+    # Initialize a TF-IDF Vectorizer
+    vectorizer = TfidfVectorizer()
+
+    # Fit and transform the descriptions to a vector
+    tfidf_matrix = vectorizer.fit_transform(df['description'])
+
+    # Example search
+    keyword = "beach"
+    results = search(keyword)
+    print(results[['image_url', 'description', 'similarity']].head())  # Print only the top results for brevity
