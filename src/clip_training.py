@@ -21,17 +21,19 @@ from clip_utils import Config, Tokenizer, CLIP_loss, metrics, CustomCLIPModel, V
 '''
 This script downloads images from the Art Institute of Chicago's API and saves them to a directory.'''
 def download_images(image_links, descriptions, base_dir="/kaggle/working/art_images"):
-    
+    # Create the directory if it doesn't exist
     os.makedirs(base_dir, exist_ok=True)
     metadata_path = os.path.join(base_dir, "metadata.csv")
+    # Download the images and save them to the directory
     with open(metadata_path, 'w', newline='') as csvfile:
         metadata_writer = csv.writer(csvfile)
         metadata_writer.writerow(['filename', 'description'])
-        
+        # Loop through the image links and download each image
         for idx, (url, description) in enumerate(zip(image_links, descriptions)):
             if idx % 25 == 0:
                 print(idx)
             time.sleep(0.3)
+            # Download the image
             try:
                 response = requests.get(url)
                 image = Image.open(BytesIO(response.content))
@@ -45,8 +47,8 @@ def download_images(image_links, descriptions, base_dir="/kaggle/working/art_ima
 
 '''
 this function downloads the images from the Art Institute of Chicago's API and saves them to a directory.'''
-def download():
-    connection = sqlite3.connect('artworks.db')
+def download(base_dir="/kaggle/working/art_images"):
+    connection = sqlite3.connect('../notebooks/artworks.db')
     cursor = connection.cursor()
     cursor.execute('SELECT * FROM artworks')
 
@@ -56,7 +58,7 @@ def download():
         links.append(row[0])
         descs.append(row[1])
 
-    download_images(links,descs)
+    download_images(links,descs, base_dir=base_dir)
 
 # Define the ArtDataset class
 # This class will load the images and their captions from the metadata CSV file.
@@ -86,9 +88,7 @@ class ArtDataset(Dataset):
 '''
 This function sets up the training, validation, and test datasets for the model training.
 '''
-def setupTrainingCSV():
-    csv_file = "/kaggle/working/art_images/metadata.csv"
-    img_dir = "/kaggle/working/art_images"
+def setupTrainingCSV(csv_file="/kaggle/working/art_images/metadata.csv", img_dir="/kaggle/working/art_images"):
 
     # Define your transformations
     transform = transforms.Compose([
@@ -113,7 +113,8 @@ def setupTrainingCSV():
     test_loader = DataLoader(test_dataset, batch_size=Config.batch_size, shuffle=False)
     return train_loader, val_loader, test_loader
 
-
+'''
+This function graphs the training and validation losses over the epochs.'''
 def graph_losses(train_losses, val_losses):
     epochs = range(1, len(train_losses) + 1)  # Assumes losses were recorded after each epoch
 
@@ -145,7 +146,7 @@ def evaluate_model(model, test_loader, device, k=10):
     total_loss = 0  # Assuming you might still want to track loss
     total_top_k_img_acc = 0
     total_top_k_cap_acc = 0
-    
+    # Evaluate the model
     with torch.no_grad():  # No need to track gradients for evaluation
         for batch in test_loader:
             images = batch["image"].to(device)
@@ -171,7 +172,10 @@ def evaluate_model(model, test_loader, device, k=10):
     print(f"Test Top-{k} Image Accuracy: {avg_top_k_img_acc:.4f}, Test Top-{k} Caption Accuracy: {avg_top_k_cap_acc:.4f}")
     return avg_top_k_img_acc, avg_top_k_cap_acc
 
+'''
+This function trains the CLIP model on the training dataset and evaluates it on the validation dataset.'''
 def train_model(train_loader, val_loader):
+    # Define the device
     device = "cuda" if torch.cuda.is_available() else "cpu"
     model = CustomCLIPModel().to(device)
     # Define optimizer
@@ -192,6 +196,7 @@ def train_model(train_loader, val_loader):
         
         # Training Phase
         for batch in train_loader:
+            # Zero the gradients
             count += 1
             image = batch["image"].to(device)
             text = batch["caption"]
@@ -207,7 +212,7 @@ def train_model(train_loader, val_loader):
             
             if count % 100 == 0:
                 print(f"Batch {count}, Training Loss: {loss.item()}")
-            
+        # Calculate average metrics
         avg_train_loss = train_loss / count
         avg_train_img_acc = train_img_acc / count
         avg_train_cap_acc = train_cap_acc / count
@@ -226,7 +231,7 @@ def train_model(train_loader, val_loader):
                 val_loss += loss.item()
                 val_img_acc += img_acc.item()
                 val_cap_acc += cap_acc.item()
-
+        # Calculate average metrics
         avg_val_loss = val_loss / len(val_loader)
         avg_val_img_acc = val_img_acc / len(val_loader)
         avg_val_cap_acc = val_cap_acc / len(val_loader)
@@ -239,11 +244,20 @@ def train_model(train_loader, val_loader):
 '''
 This function will download the images from the Art Institute of Chicago's API and train the CLIP model with the downloaded images and their descriptions.'''
 def main():
-    download()
+    # Download the images
+    download(base_dir='../data/art_images')
+    # Set up the training, validation, and test datasets 
+    # May need to tweak the paths if this is run in a different environment than Kaggle
     train_loader, val_loader, test_loader = setupTrainingCSV()
+    # Train the model
     train_losses, val_losses,model, device= train_model(train_loader, val_loader)
+    # Graph the losses
     graph_losses(train_losses, val_losses)
+    # Evaluate the model on the test dataset
     for k in [1,3, 5, 10,20]:
         evaluate_model(model, test_loader, device, k=k)
 
-
+'''
+This script downloads images from the Art Institute of Chicago's API and saves them to a directory.'''
+if __name__ == '__main__':
+    main()
