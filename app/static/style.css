@@ -39,6 +39,10 @@ header h1 {
     flex-grow: 1; /* Makes the input field grow to fill space */
 }
 
+.search-input:hover {
+    background-color: #fbefdd; /* Slightly darker beige on hover for visual feedback */
+}
+
 .search-button {
     color: #5a4a42; /* Darker brown for button text */
     cursor: pointer;
@@ -58,4 +62,21 @@ header h1 {
     border-radius: 5px; /* Rounded corners for images */
     width: 200px;
     height: auto;
+}
+
+.number-input {
+    width: 45px; /* Slightly wider to accommodate two digits comfortably */
+    padding: 8px 12px; /* Match padding for visual consistency */
+    border: 2px solid #c9a87c; /* Using the same border color as inputs/buttons */
+    background-color: #fffaf0; /* Keeping the background consistent with other inputs */
+    border-radius: 20px; /* Rounded corners to match */
+    font-size: 16px; /* Ensuring the font size is consistent */
+    font-family: 'Georgia', serif; /* Match the site's font style */
+    color: #5a4a42; /* Text color to match the overall design */
+    margin: 0 10px 0 0; /* Adjust margin as needed, added right margin for spacing */
+    text-align: center; /* Keep text centered */
+}
+
+.number-input:hover {
+    background-color: #fbefdd; /* Slightly darker beige on hover for visual feedback */
 }
