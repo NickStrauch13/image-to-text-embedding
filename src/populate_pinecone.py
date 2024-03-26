@@ -30,7 +30,7 @@ def encode_image(image_url, model, device):
 
 def load_data(sqlite_db='artworks.db'):
     '''
-    Load art data from the 
+    Load art data from the artworks db
     '''
     connection = sqlite3.connect(sqlite_db)
     cursor = connection.cursor()
