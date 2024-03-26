@@ -12,6 +12,7 @@ def embed_text_clip(text_prompt, model_path='models/art_clip_model.pth', device=
     '''
     # Load the model
     model = CustomCLIPModel()
+    model.to(device)
     model.load_state_dict(torch.load(model_path, map_location=device))
     model.eval()
     
