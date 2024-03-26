@@ -1,3 +1,8 @@
+notebooks/artworks.db
+models/
+src/create_sft_data.py
+data/sft_test_emb.json
+src/visualize_pinecone.py
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
