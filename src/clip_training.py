@@ -63,6 +63,8 @@ def download(base_dir="/kaggle/working/art_images"):
 # Define the ArtDataset class
 # This class will load the images and their captions from the metadata CSV file.
 class ArtDataset(Dataset):
+    '''
+    This class loads the images and their captions from the metadata CSV file.'''
     def __init__(self, csv_file, img_dir, transform=None):
         """
         Args:
@@ -73,10 +75,12 @@ class ArtDataset(Dataset):
         self.img_labels = pd.read_csv(csv_file)
         self.img_dir = img_dir
         self.transform = transform
-
+    '''
+    This function returns the length of the dataset.'''
     def __len__(self):
         return len(self.img_labels)
-
+    '''
+    This function returns a sample from the dataset.'''
     def __getitem__(self, idx):
         img_path = os.path.join(self.img_dir, self.img_labels.iloc[idx, 0])
         image = Image.open(img_path).convert('RGB')
