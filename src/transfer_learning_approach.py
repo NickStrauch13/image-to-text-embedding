@@ -10,6 +10,10 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
 class CustomTextEmbeddingModel(torch.nn.Module):
+    """
+    Custom model for text embedding.
+    Modifies the output of the original model to project to the desired output dimension.
+    """
     def __init__(self, original_model, output_dim):
         super(CustomTextEmbeddingModel, self).__init__()
         self.original_model = original_model
@@ -37,6 +41,9 @@ class CustomTextEmbeddingModel(torch.nn.Module):
     
 
 class Flickr30kDataset(torch.utils.data.Dataset):
+    """
+    Dataset class for the Flickr30k dataset.
+    """
     def __init__(self):
         self.dataset = load_dataset(path="nlphuji/flickr30k", cache_dir="./huggingface_data")
         self.transform = transforms.Compose([
@@ -69,6 +76,10 @@ def freeze_pretrained_weights(model: nn.Module):
 
 
 def get_text_embedding_model(model_name = "thenlper/gte-base", output_dim = 768):
+    """
+    Gets the text embedding model and tokenizer.
+    Freeze the pretrained weights and project to the desired output dimension.
+    """
     tokenizer = AutoTokenizer.from_pretrained(model_name)
     model = AutoModel.from_pretrained(model_name)
     model = CustomTextEmbeddingModel(model, output_dim)
@@ -78,6 +89,10 @@ def get_text_embedding_model(model_name = "thenlper/gte-base", output_dim = 768)
 
 
 def get_image_embedding_model(model_name = "google/vit-base-patch16-224"):
+    """
+    Gets the image embedding model and processor.
+    Switch the classifier head with an identity function to get the image embeddings.
+    """
     processor = ViTImageProcessor.from_pretrained(model_name)
     model = ViTForImageClassification.from_pretrained(model_name)
     model.classifier = nn.Identity()
@@ -85,18 +100,22 @@ def get_image_embedding_model(model_name = "google/vit-base-patch16-224"):
     return model, processor
 
 
-def train():
+def train(epochs = 10, batch_size = 32, lr = 1e-4):
+    """
+    Finetunes the text embedding model to use the same embedding space as the image embedding model.
+    The Flickr30k dataset is used, but we likely need a larger dataset for better results.
+    """
     text_model, tokenizer = get_text_embedding_model()
     image_model, processor = get_image_embedding_model()
     dataset = Flickr30kDataset()
-    dataloader = DataLoader(dataset, batch_size=32, shuffle=True)
+    dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
     loss_fn = nn.CosineSimilarity()
-    optimizer = torch.optim.Adam(list(text_model.parameters()) + list(image_model.parameters()), lr=1e-4)
+    optimizer = torch.optim.Adam(list(text_model.parameters()) + list(image_model.parameters()), lr=lr)
     training_losses = []
 
     # Training loop
     c = 0
-    for epoch in range(1):
+    for epoch in range(epochs):
         for batch in dataloader:
             # Get the image and caption from the batch
             images = batch["image"].to(device)
@@ -134,5 +153,5 @@ def train():
 
 
 if __name__ == "__main__":
-    training_losses = train()
+    training_losses = train(epochs=1, batch_size=32, lr=1e-4)
     

@@ -22,8 +22,7 @@ torchvision==0.17.1
 bs4
 lxml
 regex
-csv
-datasets==2.18.0
+datasets
 
 # Model / Embeddings
 pinecone-client
