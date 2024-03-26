@@ -18,9 +18,11 @@ from matplotlib import pyplot as plt
 from clip_utils import Config, Tokenizer, CLIP_loss, metrics, CustomCLIPModel, VisionEncoder, TextEncoder, Projection
 
 # SOURCE : https://towardsdatascience.com/clip-model-and-the-importance-of-multimodal-embeddings-1c8f6b13bf72
-'''
-This script downloads images from the Art Institute of Chicago's API and saves them to a directory.'''
+
 def download_images(image_links, descriptions, base_dir="/kaggle/working/art_images"):
+    '''
+    This function downloads the images from the Art Institute of Chicago's API and saves them to a directory.
+    '''
     
     os.makedirs(base_dir, exist_ok=True)
     metadata_path = os.path.join(base_dir, "metadata.csv")
@@ -43,9 +45,10 @@ def download_images(image_links, descriptions, base_dir="/kaggle/working/art_ima
             except Exception as e:
                 print(f"Failed to download {url}: {e}")
 
-'''
-this function downloads the images from the Art Institute of Chicago's API and saves them to a directory.'''
 def download():
+    '''
+    This function downloads the images from the Art Institute of Chicago's API and saves them to a directory.
+    '''
     connection = sqlite3.connect('artworks.db')
     cursor = connection.cursor()
     cursor.execute('SELECT * FROM artworks')
@@ -58,7 +61,6 @@ def download():
 
     download_images(links,descs)
 
-# Define the ArtDataset class
 # This class will load the images and their captions from the metadata CSV file.
 class ArtDataset(Dataset):
     def __init__(self, csv_file, img_dir, transform=None):
@@ -83,10 +85,11 @@ class ArtDataset(Dataset):
             image = self.transform(image)
         return {"image": image, "caption": caption}
 
-'''
-This function sets up the training, validation, and test datasets for the model training.
-'''
+
 def setupTrainingCSV():
+    '''
+    This function sets up the training, validation, and test datasets for the model training.
+    '''
     csv_file = "/kaggle/working/art_images/metadata.csv"
     img_dir = "/kaggle/working/art_images"
 
@@ -115,6 +118,9 @@ def setupTrainingCSV():
 
 
 def graph_losses(train_losses, val_losses):
+    '''
+    Plot the training and validation losses over the epochs.
+    '''
     epochs = range(1, len(train_losses) + 1)  # Assumes losses were recorded after each epoch
 
     # Create the plot
@@ -129,8 +135,7 @@ def graph_losses(train_losses, val_losses):
     plt.xticks(epochs)  # Ensure we have a tick for every epoch
     plt.show()
 
-'''
-This function calculates the Top-K accuracy for image-caption matching.'''
+
 def top_k_accuracy(similarity, targets, k=10):
     """Calculate Top-K accuracy for image-caption matching."""
     top_k = similarity.topk(k=k, dim=1)[1]  # Get the indices of the top k values
@@ -138,9 +143,11 @@ def top_k_accuracy(similarity, targets, k=10):
     top_k_acc = correct.any(dim=1).float().mean().item()
     return top_k_acc
 
-'''
-This function evaluates the model on the test dataset.'''
+
 def evaluate_model(model, test_loader, device, k=10):
+    '''
+    Evaluate the finetuned CLIP model on the test dataset.
+    '''
     model.eval()  # Set the model to evaluation mode
     total_loss = 0  # Assuming you might still want to track loss
     total_top_k_img_acc = 0
@@ -172,6 +179,9 @@ def evaluate_model(model, test_loader, device, k=10):
     return avg_top_k_img_acc, avg_top_k_cap_acc
 
 def train_model(train_loader, val_loader):
+    '''
+    Train the CLIP model using the training and validation datasets.
+    '''
     device = "cuda" if torch.cuda.is_available() else "cpu"
     model = CustomCLIPModel().to(device)
     # Define optimizer
@@ -236,9 +246,11 @@ def train_model(train_loader, val_loader):
     torch.save(model.state_dict(), "art_clip_model.pth")
     return train_losses, val_losses, model, device
 
-'''
-This function will download the images from the Art Institute of Chicago's API and train the CLIP model with the downloaded images and their descriptions.'''
 def main():
+    '''
+    Download the images from the Art Institute of Chicago's API and 
+    train the CLIP model with the downloaded images and their descriptions
+    '''
     download()
     train_loader, val_loader, test_loader = setupTrainingCSV()
     train_losses, val_losses,model, device= train_model(train_loader, val_loader)
