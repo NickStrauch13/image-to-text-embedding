@@ -4,6 +4,14 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 import time
 
+'''
+This code snippet demonstrates a simple TF-IDF similarity search using a SQLite database.
+It computes the cosine similarity between a keyword vector and the TF-IDF vectors of artwork descriptions.
+The similarity output metric is the cosine similarity score.
+Smaller scores indicate less similarity, while larger scores indicate more similarity.
+The larger the score, the smaller the angle between the two vectors, and the more similar the descriptions are.
+'''
+
 # Connect to the SQLite database
 db_path = '../notebooks/artworks.db'  # Adjusted path to the database
 conn = sqlite3.connect(db_path)
