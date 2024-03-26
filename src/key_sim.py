@@ -10,18 +10,15 @@ The similarity output metric is the count of keyword occurrences.
 
 # Function to count keyword occurrences in the description
 def keyword_occurrences(description, keyword):
+    '''
+    Count the occurrences of a keyword in the description.
+    '''
     return description.lower().count(keyword.lower())
 
-# Connect to the SQLite database
-db_path = '../notebooks/artworks.db'  # Adjusted path to the database
-conn = sqlite3.connect(db_path)
-query = "SELECT image_url, description FROM artworks"
-df = pd.read_sql_query(query, conn)
-
-# Ensure the database connection is closed after the data is loaded
-conn.close()
-
 def search(keyword):
+    '''
+    Perform a keyword-based similarity search on the artwork descriptions.
+    '''
     # Start timing
     start_time = time.time()
 
@@ -40,7 +37,16 @@ def search(keyword):
     # Return the sorted scores for review
     return sorted_scores
 
-# Example search
-keyword = "beach"
-results = search(keyword)
-print(results[['image_url', 'description', 'similarity']].head())  # Print only the top results for brevity
+if __name__ == "__main__":
+    # Connect to the SQLite database
+    db_path = '../notebooks/artworks.db'  # Adjusted path to the database
+    conn = sqlite3.connect(db_path)
+    query = "SELECT image_url, description FROM artworks"
+    df = pd.read_sql_query(query, conn)
+
+    # Ensure the database connection is closed after the data is loaded
+    conn.close()
+    # Example search
+    keyword = "beach"
+    results = search(keyword)
+    print(results[['image_url', 'description', 'similarity']].head())  # Print only the top results for brevity
