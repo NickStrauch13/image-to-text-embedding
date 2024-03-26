@@ -24,3 +24,12 @@ lxml
 regex
 csv
 datasets==2.18.0
+
+# Model / Embeddings
+pinecone-client
+pillow
+requests
+python-dotenv
+
+# app
+flask

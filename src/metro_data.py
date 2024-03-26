@@ -1,6 +1,9 @@
 import requests
 
 def fetch_artworks():
+    '''
+    Fetch artworks from the Met's public API.
+    '''
     # Base URL for the Met's public API
     search_url = "https://collectionapi.metmuseum.org/public/collection/v1/search"
     object_url = "https://collectionapi.metmuseum.org/public/collection/v1/objects/"
@@ -41,7 +44,8 @@ def fetch_artworks():
 
     return artworks
 
-# Fetch and print the artworks
-artworks = fetch_artworks()
-for artwork in artworks:
-    print(f"Title: {artwork['title']}, Artist: {artwork['artist']}, Image URL: {artwork['image_url']}, Description: {artwork['description']}\n")
+if __name__ == "__main__":
+    # Fetch and print the artworks
+    artworks = fetch_artworks()
+    for artwork in artworks:
+        print(f"Title: {artwork['title']}, Artist: {artwork['artist']}, Image URL: {artwork['image_url']}, Description: {artwork['description']}\n")
