@@ -4,9 +4,9 @@
 
 Transfer learning both with [CLIP](https://github.com/openai/CLIP) and google ViT to learn a latent space for both text and images for use retrieving images from a database based on natrual language prompts.
 
-<div style="text-align: center;">
+<p align="center">
     <img src="./data/demo.png" width="300">
-</div>
+</p>
 
 ## Data
 
@@ -47,7 +47,7 @@ The run the application locally, follow these steps:
 3. Activate the virtual environment using `source venv/bin/activate` for mac/linux or `venv\Scripts\activate` for windows.
 4. Install the project requirements using `pip install -r requirements.txt`.
 5. Create a `.env` file in the root directory to access the Pinecone database. The only line in the file should be `PINECONE_API_KEY=???`. Please reach out to mbk28@duke.edu to request a Pinecone API key.
-6. Download the pretrained weights for our finetuned CLIP model from [here](https://drive.google.com/file/d/1rGNPti0CtLzVJ4-zq7YGHHu1tSdUEWTD/view?usp=sharing) and place them in a `models/` directory in the project root. The file should be named `art_clip_model.pth`
+6. Download the pretrained weights for our finetuned CLIP model from [here](https://drive.google.com/file/d/1rGNPti0CtLzVJ4-zq7YGHHu1tSdUEWTD/view?usp=sharing) and place them in a `models/` directory in the project root.
 7. Run the application from the root directory using `python ./app/server.py`.
 
 ## Results
