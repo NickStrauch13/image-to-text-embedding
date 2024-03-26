@@ -15,6 +15,8 @@ import torch.nn as nn
 from torchvision import models
 from typing import List, Tuple
 from matplotlib import pyplot as plt
+from clip_utils import Config, Tokenizer, CLIP_loss, metrics, CustomCLIPModel, VisionEncoder, TextEncoder, Projection
+
 # SOURCE : https://towardsdatascience.com/clip-model-and-the-importance-of-multimodal-embeddings-1c8f6b13bf72
 '''
 This script downloads images from the Art Institute of Chicago's API and saves them to a directory.'''
@@ -41,6 +43,8 @@ def download_images(image_links, descriptions, base_dir="/kaggle/working/art_ima
             except Exception as e:
                 print(f"Failed to download {url}: {e}")
 
+'''
+this function downloads the images from the Art Institute of Chicago's API and saves them to a directory.'''
 def download():
     connection = sqlite3.connect('artworks.db')
     cursor = connection.cursor()
@@ -109,148 +113,6 @@ def setupTrainingCSV():
     test_loader = DataLoader(test_dataset, batch_size=Config.batch_size, shuffle=False)
     return train_loader, val_loader, test_loader
 
-'''
-This defines the configuration class for the CLIP model training and the training function.
-'''
-@dataclass
-class Config:
-    """
-    Configuration class for the CLIP training script.
-    """
-
-    embed_dim: int = 512  # Embedding dimension
-    transformer_embed_dim: int = 768  # Transformer embedding dimension
-    max_len: int = 32  # Maximum text length
-    text_model: str = "distilbert-base-multilingual-cased"  # Text model name
-    epochs: int = 5  # Number of training epochs
-    batch_size: int = 128  # Batch size
-
-'''
-this function computes the CLIP loss from the similarity matrix.'''
-def CLIP_loss(logits: torch.Tensor) -> torch.Tensor:
-    # Assuming n is the number of classes
-    n = logits.shape[1]
-
-    # Create labels tensor
-    labels = torch.arange(n).to(device)
-
-    # Calculate cross entropy losses along axis 0 and 1
-    loss_i = F.cross_entropy(logits.transpose(0, 1), labels, reduction="mean")
-    loss_t = F.cross_entropy(logits, labels, reduction="mean")
-
-    # Calculate the final loss
-    loss = (loss_i + loss_t) / 2
-
-    return loss
-'''
-this function computes the image and caption retrieval accuracies from the similarity matrix.'''
-def metrics(similarity: torch.Tensor):
-    y = torch.arange(len(similarity)).to(similarity.device)
-    img2cap_match_idx = similarity.argmax(dim=1)
-    cap2img_match_idx = similarity.argmax(dim=0)
-
-    img_acc = (img2cap_match_idx == y).float().mean()
-    cap_acc = (cap2img_match_idx == y).float().mean()
-
-    return img_acc, cap_acc
-
-'''
-This class defines the projection head for the CLIP model.'''
-class Projection(nn.Module):
-    def __init__(self, d_in: int, d_out: int, p: float = 0.5) -> None:
-        super().__init__()
-        self.linear1 = nn.Linear(d_in, d_out, bias=False)
-        self.linear2 = nn.Linear(d_out, d_out, bias=False)
-        self.layer_norm = nn.LayerNorm(d_out)
-        self.drop = nn.Dropout(p)
-
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        embed1 = self.linear1(x)
-        embed2 = self.drop(self.linear2(F.gelu(embed1)))
-        embeds = self.layer_norm(embed1 + embed2)
-        return embeds
-
-'''
-This class defines the custom CLIP model.'''
-class VisionEncoder(nn.Module):
-    def __init__(self, d_out: int) -> None:
-        super().__init__()
-        base = models.resnet34(pretrained=True)
-        d_in = base.fc.in_features
-        base.fc = nn.Identity()
-        self.base = base
-        self.projection = Projection(d_in, d_out)
-        for p in self.base.parameters():
-            p.requires_grad = False
-
-    def forward(self, x):
-        projected_vec = self.projection(self.base(x))
-        projection_len = torch.norm(projected_vec, dim=-1, keepdim=True)
-        return projected_vec / projection_len
-
-'''
-This class defines the text encoder for the CLIP model.'''
-class TextEncoder(nn.Module):
-    def __init__(self, d_out: int) -> None:
-        super().__init__()
-        self.base = AutoModel.from_pretrained(Config.text_model)
-        self.projection = Projection(Config.transformer_embed_dim, d_out)
-        for p in self.base.parameters():
-            p.requires_grad = False
-
-    def forward(self, x):
-        out = self.base(x)[0]
-        out = out[:, 0, :]  # get CLS token output
-        projected_vec = self.projection(out)
-        projection_len = torch.norm(projected_vec, dim=-1, keepdim=True)
-        return projected_vec / projection_len
-
-'''
-This class defines the custom CLIP model.'''    
-class Tokenizer:
-    def __init__(self, tokenizer: BertTokenizer) -> None:
-        self.tokenizer = tokenizer
-
-    def __call__(self, x: str) -> AutoTokenizer:
-        return self.tokenizer(
-            x, max_length=Config.max_len, truncation=True, padding=True, return_tensors="pt"
-        )
-
-
-
-'''
-This class defines the custom CLIP model.'''
-class CustomModel(nn.Module):
-    def __init__(self, lr: float = 1e-4) -> None:
-        super().__init__()
-        self.vision_encoder = VisionEncoder(Config.embed_dim)
-        self.caption_encoder = TextEncoder(Config.embed_dim)
-        self.tokenizer = Tokenizer(AutoTokenizer.from_pretrained(Config.text_model, use_fast=False))
-        self.lr = lr
-        self.device = "cuda" if torch.cuda.is_available() else "cpu"
-
-    def forward(self, images, text):
-        text = self.tokenizer(text).to(self.device)
-
-        image_embed = self.vision_encoder(images)
-        caption_embed = self.caption_encoder(text["input_ids"])
-        similarity = caption_embed @ image_embed.T
-
-        loss = CLIP_loss(similarity)
-        img_acc, cap_acc = metrics(similarity)
-        return loss, img_acc, cap_acc
-    def get_similarity_matrix(self, images, text):
-        """Compute the similarity matrix between images and captions."""
-        text = self.tokenizer(text).to(self.device)
-
-        # Get the embeddings
-        image_embed = self.vision_encoder(images)
-        caption_embed = self.caption_encoder(text["input_ids"])
-        
-        # Compute similarity matrix
-        similarity = caption_embed @ image_embed.T
-        
-        return similarity
 
 def graph_losses(train_losses, val_losses):
     epochs = range(1, len(train_losses) + 1)  # Assumes losses were recorded after each epoch
@@ -297,7 +159,7 @@ def evaluate_model(model, test_loader, device, k=10):
             
             # Assuming loss calculation is separate or not needed for this part
             # total_loss += loss.item()  # You would calculate loss elsewhere if needed
-            
+                
             # Accumulate Top-K accuracies
             total_top_k_img_acc += top_k_img_acc
             total_top_k_cap_acc += top_k_cap_acc
@@ -311,7 +173,7 @@ def evaluate_model(model, test_loader, device, k=10):
 
 def train_model(train_loader, val_loader):
     device = "cuda" if torch.cuda.is_available() else "cpu"
-    model = CustomModel().to(device)
+    model = CustomCLIPModel().to(device)
     # Define optimizer
     optimizer = torch.optim.Adam([
         {'params': model.vision_encoder.parameters()},
@@ -384,4 +246,4 @@ def main():
     for k in [1,3, 5, 10,20]:
         evaluate_model(model, test_loader, device, k=k)
 
-    
+
